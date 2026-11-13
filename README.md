@@ -15,7 +15,7 @@ The parts feed each other: diary notes become teardown drafts, teardowns feed th
 
 Teardowns included: The Last of Us Part I, Dark Souls, Baldur's Gate 3, Hades, Celeste, Slay the Spire, Hollow Knight and Into the Breach.
 
-Plain HTML, CSS and JavaScript. No build step, no dependencies, no tracking. Fonts are included in the repo. The only outside service the site contacts is Wikidata (and the Wikipedia intro of the chosen game), and only when someone presses Search. Sending a teardown opens GitHub, but only when the person presses "Open GitHub".
+Plain HTML, CSS and JavaScript. No build step, no dependencies, no tracking. Fonts are included in the repo. The only outside services are Wikidata and Wikipedia: searches and recommendations run only when someone presses a button, and profile covers load from Wikimedia's image servers. Sending a teardown opens GitHub, but only when the person presses "Open GitHub".
 
 ## What is inside
 
@@ -135,15 +135,24 @@ Teardowns with an author show "By name" (linked when there is a link) on their p
 
 A taste profile built from what a person loves, in any medium.
 
-- **Favorites**: up to four games, movies, series and songs, each looked up on Wikidata (or added as typed). Their genres are kept with them.
+- **Favorites**: up to four games, movies, series and songs, each looked up on Wikidata (or added as typed). Their genres are kept with them. A song without genres borrows the genres of its artist. They can be reordered, and the first of each kind is marked as the top pick.
+- **Covers**: the lead image of each favorite's English Wikipedia article (box art, poster, single cover), loaded from Wikimedia's servers. Where there is none, a generated pattern is shown instead. Teardown pages still use no game assets.
+- **Banner**: the image behind the name. Automatic (the first favorite with a cover), any chosen favorite, or the pattern only.
 - **Taste**: the genres are read as six design traits (Tension, Challenge, Story, Discovery, Strategy, Action) with simple keyword rules in `js/profile.js`. The result is shown as a radar chart, bars and a short archetype such as "The Explorer, with a taste for challenge". Items added without genres do not count.
 - **Personal accent**: one of six colors. It recolors the whole site for that person, in both themes.
-- **Recommendations**: teardowns ranked by how well their tags and genre match the taste, with the favorite that explains each one. "Find games" looks up games that share genres with the favorite games on Wikidata, and each can be added to the diary as "Want to play".
+- **Recommendations**: teardowns ranked by how well their tags and genre match the taste, with the favorite that explains each one.
+- **Picked for you**: "Find games for me" looks up games on Wikidata from four sources, each with the reason and the favorite behind it:
+  - *Like your games*: games that share genres with your favorite games.
+  - *From what you watch*: games based on your movies and series, or set in the same franchise or world.
+  - *Same mood as your shows*: games in genres that match the mood words of your movies and series (horror, science fiction, mystery and so on).
+  - *Music you would like*: games scored by your favorite artists, or by composers who work in the genres of your songs.
+
+  Up to six per source, with variety (no more than two from the same composer or favorite before repeating). Results are kept with the profile, can be filtered by source, and each game can be added to the diary as "Want to play".
 - **Share**: a link that carries the profile itself (name, bio, favorites and traits). Whoever opens it sees the card, a match percentage against their own profile, both shapes on the radar and the favorites they share.
 
 Saved only in this browser (localStorage `gt-profile`). Recommending other people's profiles automatically needs accounts and a server, which the site does not have yet. The share link is the way to compare for now.
 
-The avatars and favorite posters are generated patterns, drawn from a hash of the name or title. No images are downloaded.
+The avatars, and the posters of favorites without a cover, are generated patterns drawn from a hash of the name or title. The shared link also carries the cover addresses, so the profile looks the same for whoever opens it.
 
 ## Diary
 

@@ -11,7 +11,7 @@ window.TEARDOWN_META = {
      While it is empty, the editor offers "Download file" but not "Send to the site". */
   repo: "https://github.com/SantiDark/game-teardowns",
   disclaimer:
-    "Independent design analysis. All diagrams are original and no game assets are used. Game titles belong to their respective owners.",
+    "Independent design analysis. All diagrams are original, and teardowns use no game assets. Cover images on profiles are shown from Wikipedia. Titles and covers belong to their respective owners.",
 
   layers: [
     { id: "Mechanic", def: "An action the player performs, such as rolling, parrying or crafting." },
