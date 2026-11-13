@@ -394,8 +394,11 @@
   }
 
   var DOORS = [
-    { ic: 'make', k: 'Making a game', t: 'See how other games solve your problem',
-      d: 'Design problems, each with the systems that answer it across games, and a question to test it in your project.', href: '#/problems', go: 'Browse problems' },
+    PROBLEMS.length ?
+      { ic: 'make', k: 'Making a game', t: 'See how other games solve your problem',
+        d: 'Design problems, each with the systems that answer it across games, and a question to test it in your project.', href: '#/problems', go: 'Browse problems' } :
+      { ic: 'make', k: 'Making a game', t: 'See how other games solve it',
+        d: 'Every system from every teardown in one library, searchable by mechanic and layer, with what it does and why.', href: '#/systems', go: 'Browse systems' },
     { ic: 'learn', k: 'Learning design', t: 'Take a game apart with a method',
       d: 'Read the teardowns, then write your own in the guided editor and export it for your portfolio.', href: '#/new', go: 'Write a teardown' },
     { ic: 'teach', k: 'Teaching design', t: 'Give a class one shared template',
@@ -874,7 +877,8 @@
     app.innerHTML =
       '<div class="band"><div class="wrap band-in">' +
       '<div class="band-top"><nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Teardowns</a>' + icon('chevron') + '<span aria-current="page">' + esc(g.title) + '</span></nav>' +
-      '<a class="btn btn-sm" href="#/edit/' + encodeURIComponent(g.slug) + '">' + icon('edit') + 'Edit this teardown</a></div>' +
+      '<span class="band-acts"><button type="button" class="btn btn-sm" id="print-btn">' + icon('download') + 'Save as PDF</button>' +
+      '<a class="btn btn-sm" href="#/edit/' + encodeURIComponent(g.slug) + '">' + icon('edit') + 'Edit this teardown</a></span></div>' +
       '<div class="band-grid"><div>' +
       '<p class="eyebrow"><span class="pip" aria-hidden="true"></span>Teardown ' + pad2(idx + 1) + ' · ' + esc(g.genre) + '</p>' +
       '<h1>' + esc(g.title) + '</h1>' +
@@ -905,7 +909,7 @@
       '<article class="g-body" aria-label="' + esc(g.title) + ' teardown">' +
       SECTIONS.map(function (s, i) {
         return '<section class="sec" id="s-' + s[0] + '" aria-labelledby="h-' + s[0] + '">' + secHead(i, s[0], s[1], subs[s[0]]) + body[s[0]](g) + '</section>';
-      }).join('') +
+      }).join('') + similarHTML(g) +
       ((prev || next) ? '<nav class="pager" aria-label="Other teardowns">' +
         (prev ? '<a href="' + gameHref(prev) + '"><span class="k">' + icon('back') + 'Previous teardown</span><span class="t">' + esc(prev.title) + '</span><span class="h">' + esc(prev.hook) + '</span></a>' : '') +
         (next ? '<a class="next" href="' + gameHref(next) + '"><span class="k">Next teardown' + icon('arrow') + '</span><span class="t">' + esc(next.title) + '</span><span class="h">' + esc(next.hook) + '</span></a>' : '') +
@@ -916,8 +920,41 @@
     initSystems(app);
     var stopPace = initPacing(app, g);
     var stopSpy = initSpy(g);
-    cleanup = function () { stopPace(); stopSpy(); };
+
+    /* print: open every system card first, then put them back */
+    var wasOpen = [];
+    function beforePrint() { wasOpen = all('.sys', app).map(function (d) { var o = d.open; d.open = true; return o; }); }
+    function afterPrint() { all('.sys', app).forEach(function (d, i) { d.open = !!wasOpen[i]; }); }
+    window.addEventListener('beforeprint', beforePrint);
+    window.addEventListener('afterprint', afterPrint);
+    document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+    cleanup = function () {
+      stopPace(); stopSpy();
+      window.removeEventListener('beforeprint', beforePrint);
+      window.removeEventListener('afterprint', afterPrint);
+    };
     return 'game';
+  }
+
+  /* teardowns that share tags, genre words and layers with this one */
+  function similarHTML(g) {
+    function words(x) { return x.tags.map(function (t) { return t.toLowerCase(); }).concat(String(x.genre).toLowerCase().split(/[^a-z]+/).filter(function (w) { return w.length > 3; })); }
+    function layers(x) { var o = {}; x.systems.forEach(function (s) { o[s.layer] = (o[s.layer] || 0) + 1; }); return o; }
+    var mine = words(g), ml = layers(g);
+    var ranked = GAMES.filter(function (o) { return o !== g; }).map(function (o) {
+      var ow = words(o), shared = mine.filter(function (w, i) { return ow.indexOf(w) >= 0 && mine.indexOf(w) === i; });
+      var ol = layers(o), overlap = 0;
+      LAYERS.forEach(function (l) { overlap += Math.min(ml[l.id] || 0, ol[l.id] || 0); });
+      return { g: o, shared: shared, score: shared.length * 3 + overlap / Math.max(1, g.systems.length) };
+    }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
+    if (!ranked.length) return '';
+    return '<section class="similar" aria-labelledby="sim-h"><h2 class="sub-h" id="sim-h">' + icon('arrow') + 'Similar teardowns</h2><ul class="recs">' +
+      ranked.map(function (x, i) {
+        var tags = x.g.tags.filter(function (t) { return x.shared.indexOf(t.toLowerCase()) >= 0; });
+        return '<li><a class="rec" href="' + gameHref(x.g) + '"><span class="rec-thumb gthumb">' + thumbSVG(x.g, 'sm' + i) + '</span>' +
+          '<span class="rec-b"><span class="rec-top"><span class="rec-match">' + esc(x.g.genre) + '</span></span><span class="rec-t">' + esc(x.g.title) + '</span>' +
+          '<span class="rec-why">' + (tags.length ? 'Also ' + tags.map(function (t) { return t.toLowerCase(); }).join(', ') : esc(x.g.hook)) + '</span></span></a></li>';
+      }).join('') + '</ul></section>';
   }
 
   /* --- table of contents: scroll-spy, progress, smooth jumps --- */
@@ -994,7 +1031,7 @@
       '<div><dt>Games</dt><dd>' + GAMES.length + '</dd></div><div><dt>Layers</dt><dd>' + LAYERS.length + '</dd></div></dl></aside>';
     app.innerHTML = bandHTML('Problems', 'For anyone making a game', 'Design problems',
       'Start from the problem you have, not from a game. Each problem gathers the systems that answer it across every teardown, with what they do, why they exist and the effect on the player.', side) +
-      '<div class="wrap page-body">' +
+      '<div class="wrap page-body">' + subnav('problems') + '<div style="height:1.5rem"></div>' +
       (PROBLEMS.length ?
         '<div class="block-head"><div><p class="eyebrow">Library</p><h2 id="pl-h">' + plural(PROBLEMS.length, 'problem', 'problems') + '</h2></div>' +
         '<label class="search"><span class="sr">Search problems</span>' + icon('search') + '<input type="search" id="pq" placeholder="Search problems" autocomplete="off"></label></div>' +
@@ -1005,7 +1042,7 @@
         '<div class="p-empty card"><span class="layer-ic" aria-hidden="true">' + icon('problem') + '</span><div>' +
         '<h2>The problem list is being written</h2>' +
         '<p>Each problem will be a question a designer asks, such as how to make failure feel fair. It will collect the systems from every teardown that answer it, so you can compare solutions from different games side by side.</p>' +
-        '<div class="actions"><a class="btn" href="#/">Browse the teardowns</a><a class="btn" href="#/method">Read the method</a></div></div></div>') +
+        '<div class="actions"><a class="btn btn-primary" href="#/systems">Browse all systems</a><a class="btn" href="#/">Browse the teardowns</a></div></div></div>') +
       '</div>';
     if (!PROBLEMS.length) return 'problems';
 
@@ -1030,6 +1067,73 @@
       empty.hidden = list.length > 0;
       st.textContent = 'SHOWING ' + list.length + ' OF ' + plural(PROBLEMS.length, 'PROBLEM', 'PROBLEMS');
     }
+    q.addEventListener('input', apply);
+    apply();
+    return 'problems';
+  }
+
+  /* tabs shared by the two "making a game" pages */
+  function subnav(cur) {
+    return '<nav class="subnav" aria-label="Design library"><a href="#/problems"' + (cur === 'problems' ? ' aria-current="page"' : '') + '>' + icon('problem') + 'Problems</a>' +
+      '<a href="#/systems"' + (cur === 'systems' ? ' aria-current="page"' : '') + '>' + icon('System') + 'All systems</a></nav>';
+  }
+
+  /* ================================================================
+     SYSTEMS LIBRARY  (every system from every teardown)
+  ================================================================ */
+  var sysLayer = '';
+  function systemsLib() {
+    document.title = 'All systems | ' + SITE;
+    var list = [];
+    GAMES.forEach(function (g) { g.systems.forEach(function (s) { list.push({ g: g, s: s }); }); });
+    var counts = {};
+    list.forEach(function (x) { counts[x.s.layer] = (counts[x.s.layer] || 0) + 1; });
+    var max = Math.max.apply(null, LAYERS.map(function (l) { return counts[l.id] || 0; }).concat([1]));
+    var side = '<aside class="glance stack" aria-label="Systems per layer"><div class="stack-h"><span>SYSTEMS PER LAYER</span><span>' + list.length + ' TOTAL</span></div><ol>' +
+      LAYERS.map(function (l, i) {
+        var c = counts[l.id] || 0;
+        return '<li><span class="layer-ic" aria-hidden="true">' + icon(l.id) + '</span><span class="nm"><span class="mono">L' + (i + 1) + '</span>' + esc(l.id) + '</span>' +
+          '<span class="sbar" aria-hidden="true"><b style="width:' + Math.round((c / max) * 100) + '%"></b></span><span class="v">' + c + '</span></li>';
+      }).join('') + '</ol></aside>';
+    app.innerHTML = bandHTML('All systems', 'For anyone making a game', 'All systems',
+      'Every system from every teardown in one place: what it does, why it exists and its effect on the player. Search for a mechanic or filter by layer, then open the game it comes from.', side) +
+      '<div class="wrap page-body">' + subnav('systems') +
+      '<div class="block-head" style="margin-top:1.5rem"><div class="chips" role="group" aria-label="Filter by layer">' +
+      '<button type="button" class="chip" data-ly="" aria-pressed="' + (!sysLayer) + '">All<span class="n">' + list.length + '</span></button>' +
+      LAYERS.map(function (l) { return '<button type="button" class="chip" data-ly="' + esc(l.id) + '" aria-pressed="' + (sysLayer === l.id) + '">' + esc(l.id) + '<span class="n">' + (counts[l.id] || 0) + '</span></button>'; }).join('') +
+      '</div><label class="search"><span class="sr">Search systems</span>' + icon('search') + '<input type="search" id="sq" placeholder="Search, e.g. healing or map" autocomplete="off"></label></div>' +
+      '<p class="status" id="sstatus" role="status"></p><ul class="sol-grid sl-grid" id="srows"></ul>' +
+      '<p id="sempty" class="notice" hidden>No system matches. Clear the search or choose "All".</p></div>';
+
+    var q = document.getElementById('sq'), rows = document.getElementById('srows');
+    var st = document.getElementById('sstatus'), empty = document.getElementById('sempty');
+    function apply() {
+      var term = q.value.trim().toLowerCase();
+      var shown = list.filter(function (x) {
+        var hay = [x.s.name, x.s.what, x.s.why, x.s.effect, x.g.title].join(' ').toLowerCase();
+        return (!sysLayer || x.s.layer === sysLayer) && (!term || hay.indexOf(term) >= 0);
+      });
+      rows.innerHTML = shown.map(function (x, i) {
+        return '<li><article class="card sol" aria-label="' + esc(x.s.name + ' in ' + x.g.title) + '">' +
+          '<div class="sol-top"><a class="sol-game" href="' + gameHref(x.g, 'systems') + '"><span class="thumb-sm">' + thumbSVG(x.g, 's' + i) + '</span>' + esc(x.g.title) + '</a>' +
+          '<span class="sys-top">' + layerDots(x.s.layer) + esc(x.s.layer) + '</span></div>' +
+          '<h3>' + esc(x.s.name) + '</h3>' +
+          '<dl><div><dt>What it does</dt><dd>' + esc(x.s.what) + '</dd></div>' +
+          '<div><dt>Why it exists</dt><dd>' + esc(x.s.why) + '</dd></div>' +
+          '<div><dt>Effect on the player</dt><dd>' + esc(x.s.effect) + '</dd></div></dl>' +
+          (problemsOfSystem(x.s).length ? '<p class="sys-probs"><span>' + icon('problem') + 'Answers</span>' + problemsOfSystem(x.s).map(function (p) { return '<a href="#/problem/' + p.id + '">' + esc(p.name) + '</a>'; }).join('') + '</p>' : '') +
+          '</article></li>';
+      }).join('');
+      empty.hidden = shown.length > 0;
+      st.textContent = 'SHOWING ' + shown.length + ' OF ' + plural(list.length, 'SYSTEM', 'SYSTEMS') + ' FROM ' + plural(GAMES.length, 'GAME', 'GAMES');
+    }
+    all('[data-ly]', app).forEach(function (c) {
+      c.addEventListener('click', function () {
+        sysLayer = c.getAttribute('data-ly');
+        all('[data-ly]', app).forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); });
+        apply();
+      });
+    });
     q.addEventListener('input', apply);
     apply();
     return 'problems';
@@ -1094,7 +1198,8 @@
       return 'compare';
     }
     var rows = META.compareRows || [];
-    var selected = GAMES.map(function (g) { return g.slug; });
+    /* start with three games side by side; the picker adds the rest */
+    var selected = GAMES.slice(0, 3).map(function (g) { return g.slug; });
 
     app.innerHTML =
       bandHTML('Compare', plural(GAMES.length, 'game', 'games') + ' · ' + plural(rows.length, 'question', 'questions'), 'Compare',
@@ -1103,7 +1208,7 @@
       '<div class="wrap page-body">' +
       '<fieldset class="picker"><legend>Games in the table</legend>' +
       GAMES.map(function (g) {
-        return '<label><input type="checkbox" value="' + esc(g.slug) + '" checked><span class="chip"><span class="box">' +
+        return '<label><input type="checkbox" value="' + esc(g.slug) + '"' + (selected.indexOf(g.slug) >= 0 ? ' checked' : '') + '><span class="chip"><span class="box">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' + ICON.check + '</svg></span>' + esc(g.title) + '</span></label>';
       }).join('') + '</fieldset>' +
       '<div class="table-wrap" tabindex="0" role="region" aria-label="Comparison table" id="table-wrap"></div>' +
@@ -1273,6 +1378,7 @@
       else if (p[0] === 'compare') name = compare();
       else if (p[0] === 'method') name = method();
       else if (p[0] === 'problems') name = problems();
+      else if (p[0] === 'systems') name = systemsLib();
       else if (p[0] === 'problem') { var pr = problemOf(p[1]); name = pr ? problem(pr) : notFound(); }
       else if (p[0] === 'game') {
         var g = GAMES.filter(function (x) { return x.slug === p[1]; })[0];
@@ -1295,6 +1401,100 @@
   }
 
   window.addEventListener('hashchange', function () { route(true); });
+
+  /* ---------- search everywhere (Ctrl/Cmd + K, or "/") ---------- */
+  var PAGES = [['Teardowns', '#/'], ['Design problems', '#/problems'], ['All systems', '#/systems'], ['Compare', '#/compare'],
+    ['My diary', '#/diary'], ['My profile', '#/me'], ['Editor', '#/edit'], ['Add a game', '#/new'], ['Method', '#/method'], ['Contribute', '#/contribute']];
+  var KIND_ORDER = { Teardown: 0, Problem: 1, System: 2, Page: 3 };
+  function searchIndex() {
+    var out = PAGES.map(function (p) { return { k: 'Page', t: p[0], s: '', h: p[1], ic: 'arrow' }; });
+    GAMES.forEach(function (g) {
+      out.push({ k: 'Teardown', t: g.title, s: [g.studio, shortYear(g.year), g.genre].join(' · '), h: gameHref(g), ic: 'play', x: g.tags.join(' ') + ' ' + g.hook });
+      g.systems.forEach(function (s) {
+        out.push({ k: 'System', t: s.name, s: g.title + ' · ' + s.layer, h: gameHref(g, 'systems'), ic: ICON[s.layer] ? s.layer : 'System', x: s.what });
+      });
+    });
+    PROBLEMS.forEach(function (p) { out.push({ k: 'Problem', t: p.name, s: p.question || '', h: '#/problem/' + p.id, ic: 'problem' }); });
+    return out;
+  }
+  function scoreOf(it, q) {
+    var t = it.t.toLowerCase();
+    if (t === q) return 100;
+    if (t.indexOf(q) === 0) return 80;
+    if (t.indexOf(' ' + q) >= 0) return 60;
+    if (t.indexOf(q) >= 0) return 50;
+    if ((it.s + ' ' + (it.x || '')).toLowerCase().indexOf(q) >= 0) return 20;
+    return 0;
+  }
+  var ck = null, ckOpener = null;
+  function openSearch() {
+    if (!ck) {
+      ck = document.createElement('dialog');
+      ck.className = 'cmdk';
+      ck.setAttribute('aria-label', 'Search the site');
+      ck.innerHTML = '<div class="cmdk-in"><div class="cmdk-top">' + icon('search') +
+        '<input id="ck-q" type="text" role="combobox" aria-expanded="true" aria-controls="ck-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search teardowns, systems and pages" aria-label="Search">' +
+        '<kbd>Esc</kbd></div><ul id="ck-list" role="listbox" aria-label="Results"></ul>' +
+        '<div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span class="ck-count" id="ck-count" role="status"></span></div></div>';
+      document.body.appendChild(ck);
+      var input = ck.querySelector('#ck-q'), listEl = ck.querySelector('#ck-list'), countEl = ck.querySelector('#ck-count');
+      var results = [], active = 0;
+      var draw = function () {
+        var q = input.value.trim().toLowerCase(), idx = searchIndex();
+        results = q ? idx.map(function (it) { return { it: it, sc: scoreOf(it, q) }; }).filter(function (x) { return x.sc > 0; })
+          .sort(function (a, b) { return b.sc - a.sc || KIND_ORDER[a.it.k] - KIND_ORDER[b.it.k]; }).slice(0, 12).map(function (x) { return x.it; })
+          : idx.filter(function (it) { return it.k === 'Teardown'; }).concat(idx.filter(function (it) { return it.k === 'Page'; }).slice(1, 5));
+        active = 0;
+        listEl.innerHTML = results.length ? results.map(function (it, i) {
+          return '<li role="option" id="ck-o' + i + '" data-i="' + i + '" aria-selected="' + (i === 0) + '">' +
+            '<span class="ck-ic" aria-hidden="true">' + icon(it.ic) + '</span><span class="ck-b"><span class="ck-t">' + esc(it.t) + '</span>' +
+            (it.s ? '<span class="ck-s">' + esc(it.s) + '</span>' : '') + '</span><span class="ck-k">' + it.k + '</span></li>';
+        }).join('') : '<li class="ck-none">Nothing matches "' + esc(input.value.trim()) + '".</li>';
+        input.setAttribute('aria-activedescendant', results.length ? 'ck-o0' : '');
+        countEl.textContent = q ? plural(results.length, 'result', 'results') : '';
+      };
+      var setActive = function (i) {
+        if (!results.length) return;
+        active = (i + results.length) % results.length;
+        all('[role="option"]', listEl).forEach(function (o, k) { o.setAttribute('aria-selected', String(k === active)); });
+        var el = document.getElementById('ck-o' + active);
+        input.setAttribute('aria-activedescendant', 'ck-o' + active);
+        if (el) el.scrollIntoView({ block: 'nearest' });
+      };
+      var go = function (i) {
+        var it = results[i];
+        if (!it) return;
+        ck.close();
+        if (location.hash === it.h) route(false); else location.hash = it.h;
+      };
+      input.addEventListener('input', draw);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+        else if (e.key === 'Enter') { e.preventDefault(); go(active); }
+      });
+      listEl.addEventListener('click', function (e) { var o = e.target.closest('[data-i]'); if (o) go(Number(o.getAttribute('data-i'))); });
+      listEl.addEventListener('mousemove', function (e) { var o = e.target.closest('[data-i]'); if (o && Number(o.getAttribute('data-i')) !== active) setActive(Number(o.getAttribute('data-i'))); });
+      ck.addEventListener('click', function (e) { if (e.target === ck) ck.close(); });
+      /* back to where the user was; a navigation then moves focus to the new page */
+      ck.addEventListener('close', function () { if (ckOpener && document.contains(ckOpener)) { try { ckOpener.focus({ preventScroll: true }); } catch (err) { /* ignore */ } } });
+      ck.draw = draw;
+    }
+    if (ck.open) return;
+    ckOpener = document.activeElement;
+    setMenu(false);
+    ck.querySelector('#ck-q').value = '';
+    ck.draw();
+    ck.showModal();
+    ck.querySelector('#ck-q').focus();
+  }
+  var searchBtn = document.getElementById('search-btn');
+  if (searchBtn) searchBtn.addEventListener('click', openSearch);
+  document.addEventListener('keydown', function (e) {
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '') || (e.target && e.target.isContentEditable);
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); openSearch(); }
+    else if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey) { e.preventDefault(); openSearch(); }
+  });
 
   /* ---------- small-screen menu ---------- */
   var menuBtn = document.getElementById('menu-btn');

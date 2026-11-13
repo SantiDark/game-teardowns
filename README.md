@@ -13,6 +13,8 @@ It is built for four kinds of people, and the home page has a way in for each:
 
 The parts feed each other: diary notes become teardown drafts, teardowns feed the Problems library, and the library helps people making games, learning or teaching.
 
+Teardowns included: The Last of Us Part I, Dark Souls, Baldur's Gate 3, Hades, Celeste, Slay the Spire, Hollow Knight and Into the Breach.
+
 Plain HTML, CSS and JavaScript. No build step, no dependencies, no tracking. Fonts are included in the repo. The only outside service the site contacts is Wikidata (and the Wikipedia intro of the chosen game), and only when someone presses Search. Sending a teardown opens GitHub, but only when the person presses "Open GitHub".
 
 ## What is inside
@@ -33,6 +35,10 @@ Plain HTML, CSS and JavaScript. No build step, no dependencies, no tracking. Fon
   - Takeaways: design tensions, then cards with the project tag (ROADS, Counterpoint, etc.) and the test question.
 - **Compare**: the same questions asked of every game. On a phone the table turns into one card per question.
 - **Problems**: design problems such as "make failure feel fair". Each problem page gathers the systems that answer it in every teardown (what they do, why they exist, their effect), related problems, and a note when there are fewer than two games as examples. Systems on teardown pages link back to the problems they answer. See "Design problems" below.
+- **All systems**: every system from every teardown in one library, with a filter by layer and a search. It shares a tab bar with Problems.
+- **Search everywhere**: press Ctrl + K (Cmd + K on a Mac), `/`, or the magnifying glass in the header. It finds teardowns, systems, problems and pages, and works with the keyboard.
+- **Similar teardowns** at the end of each teardown, and **Save as PDF**, which prints the teardown with every system card open and without the site's navigation.
+- **My profile**: see below.
 - **Diary**: see below.
 - **Method**: how a teardown is built, and how to use it in a class.
 - **Editor**: change any teardown, add new games and export the result (see below).
@@ -53,6 +59,10 @@ Plain HTML, CSS and JavaScript. No build step, no dependencies, no tracking. Fon
 | `#/diary` | My diary: games, adding a game, patterns |
 | `#/diary/<id>` | One game in the diary: moments and curve |
 | `#/contribute` | How to send a teardown, and how to publish one |
+| `#/systems` | Every system from every teardown |
+| `#/me` | My profile: favorites, taste, recommendations, share link |
+| `#/me/edit` | Create or change the profile |
+| `#/u/<code>` | A shared profile and how well it matches yours |
 | `#/edit` | Editor: every teardown, export, discard |
 | `#/edit/<slug>` | Editor form for one teardown |
 | `#/new` | Add a game |
@@ -121,6 +131,20 @@ Teardowns with an author show "By name" (linked when there is a link) on their p
 
 **Download file** in the editor saves any teardown as `teardown-<address>.json`, also useful as a backup or to move a teardown to another browser with Import.
 
+## My profile
+
+A taste profile built from what a person loves, in any medium.
+
+- **Favorites**: up to four games, movies, series and songs, each looked up on Wikidata (or added as typed). Their genres are kept with them.
+- **Taste**: the genres are read as six design traits (Tension, Challenge, Story, Discovery, Strategy, Action) with simple keyword rules in `js/profile.js`. The result is shown as a radar chart, bars and a short archetype such as "The Explorer, with a taste for challenge". Items added without genres do not count.
+- **Personal accent**: one of six colors. It recolors the whole site for that person, in both themes.
+- **Recommendations**: teardowns ranked by how well their tags and genre match the taste, with the favorite that explains each one. "Find games" looks up games that share genres with the favorite games on Wikidata, and each can be added to the diary as "Want to play".
+- **Share**: a link that carries the profile itself (name, bio, favorites and traits). Whoever opens it sees the card, a match percentage against their own profile, both shapes on the radar and the favorites they share.
+
+Saved only in this browser (localStorage `gt-profile`). Recommending other people's profiles automatically needs accounts and a server, which the site does not have yet. The share link is the way to compare for now.
+
+The avatars and favorite posters are generated patterns, drawn from a hash of the name or title. No images are downloaded.
+
 ## Diary
 
 A log for players who want to notice why a game works.
@@ -149,6 +173,7 @@ js/data.js             all content (edit this to add or change a teardown)
 js/app.js              routing, rendering, SVG diagrams and the local store
 js/editor.js           editor, add-a-game page, Wikidata search, export
 js/diary.js            diary: games, moments, curve, patterns, teardown drafts
+js/profile.js          taste profile, recommendations, shared profiles
 tools/make-file-fonts.py   regenerates css/fonts-file.css
 assets/fonts/          Archivo and Source Serif 4 (SIL Open Font License)
 favicon.svg

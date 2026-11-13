@@ -475,5 +475,21 @@
     return 'diary';
   }
 
+  /* used by other pages (profile recommendations): add a game, or find it if it is already there */
+  GT.diary = {
+    find: function (title, wd) {
+      return DATA.games.filter(function (g) {
+        return ed.slugify(g.title) === ed.slugify(title) || (wd && g.source && g.source.wikidata === wd);
+      })[0] || null;
+    },
+    add: function (entry, status) {
+      var dup = GT.diary.find(entry.title, entry.source && entry.source.wikidata);
+      if (dup) return dup.id;
+      var now = new Date().toISOString();
+      entry.id = uid(); entry.status = status || 'planned'; entry.added = now; entry.updated = now; entry.moments = [];
+      return commit(function () { DATA.games.push(entry); }) ? entry.id : null;
+    }
+  };
+
   GT.view('diary', function (p) { return p[1] ? diaryGame(p[1]) : diaryHome(); });
 })();
