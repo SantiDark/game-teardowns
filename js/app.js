@@ -290,9 +290,23 @@
   function paintThemeBtn() { themeBtn.setAttribute('aria-pressed', String(currentTheme() === 'dark')); }
   themeBtn.addEventListener('click', function () {
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('gt-theme', next); } catch (e) { /* storage may be blocked */ }
-    paintThemeBtn();
+    function apply() {
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('gt-theme', next); } catch (e) { /* storage may be blocked */ }
+      paintThemeBtn();
+    }
+    if (!document.startViewTransition || reduceMotion.matches) { apply(); return; }
+    /* the new theme grows in a circle from the button */
+    var r = themeBtn.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    var end = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    document.documentElement.classList.add('vt-theme');
+    var t = document.startViewTransition(apply);
+    t.ready.then(function () {
+      document.documentElement.animate(
+        { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + end + 'px at ' + x + 'px ' + y + 'px)'] },
+        { duration: 520, easing: 'cubic-bezier(.2,.7,.2,1)', pseudoElement: '::view-transition-new(root)' });
+    }).catch(function () { /* skipped */ });
+    t.finished.then(function () { document.documentElement.classList.remove('vt-theme'); }, function () { document.documentElement.classList.remove('vt-theme'); });
   });
   paintThemeBtn();
 
@@ -430,45 +444,44 @@
       /* hero */
       '<section class="wrap hero" aria-labelledby="hero-h">' +
       '<div class="hero-copy">' +
-      '<p class="eyebrow"><span class="pip" aria-hidden="true"></span>Game design case studies</p>' +
+      '<p class="kicker">Game design teardowns' + (META.author ? ' <span>by ' + esc(META.author) + '</span>' : '') + '</p>' +
       '<h1 id="hero-h">Games, taken apart <em class="hero-em">to see why they work.</em></h1>' +
       '<p class="lede">When a game stays with me, I want to know why. Each teardown follows its core loop, systems, feedback and pacing, then ends with what I would take into my own work. Same structure every time, so any two games can sit side by side.</p>' +
       '<div class="actions">' +
       '<a class="btn btn-primary" href="#/" data-jump="list-h">Browse teardowns' + icon('arrow', 'ic-arrow') + '</a>' +
       '<a class="btn" href="#/compare">Compare games</a></div>' +
-      (META.author ? '<p class="byline-sm"><span class="avatar" aria-hidden="true">' + esc(initials) + '</span><span>Written and diagrammed by <strong>' + esc(META.author) + '</strong></span></p>' : '') +
       '</div>' +
-      '<figure class="viz" style="margin:0">' +
-      '<div class="viz-bar"><span class="viz-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="viz-title">pacing.compare</span><span class="viz-title">' + shown.length + ' curves</span></div>' +
-      '<div class="viz-body"><div class="viz-head"><h2>How tension rises and falls</h2><span>INTENSITY 0–10</span></div>' +
-      '<div id="hero-chart">' + heroSVG(shown) + '</div></div>' +
+      '<figure class="viz hero-fig">' +
+      '<div class="viz-head"><h2>How tension rises and falls</h2><span>Intensity, 0 to 10</span></div>' +
+      '<div id="hero-chart">' + heroSVG(shown) + '</div>' +
       '<ul class="viz-legend">' + shown.map(function (g, gi) {
-        return '<li><span class="lg-name">' + swatch(gi) + esc(g.title) + '</span>' +
-          '<span class="lg-meta">PEAK ' + esc(g.pacing.points[peakOf(g)].v) + ' · ' + g.pacing.points.length + ' BEATS</span></li>';
+        return '<li><a href="' + gameHref(g, 'pacing') + '"><span class="lg-name">' + swatch(gi) + esc(g.title) + '</span>' +
+          '<span class="lg-meta">Peaks at ' + esc(g.pacing.points[peakOf(g)].v) + ' over ' + g.pacing.points.length + ' beats</span></a></li>';
       }).join('') + '</ul>' +
-      '<figcaption class="sr">Pacing curves from the teardowns, drawn from my own reading of each game\'s rhythm, not measured data.</figcaption>' +
+      '<figcaption><span class="fig-n">Fig. 1</span>Pacing of three teardowns, drawn from my own reading of each game\'s rhythm. Not measured data.</figcaption>' +
       '</figure>' +
       '</section>' +
+
+      /* the library in one line */
+      '<section class="wrap" aria-label="In numbers"><dl class="tally">' +
+      '<div><dd>' + GAMES.length + '</dd><dt>teardowns, one template</dt></div>' +
+      '<div><dd>' + nSystems + '</dd><dt>systems, each with what, why and effect</dt></div>' +
+      '<div><dd>' + nSteps + '</dd><dt>loop steps, with what the player feels</dt></div>' +
+      '<div><dd>' + nTakes + '</dd><dt>takeaways' + (projects.length ? ' for ' + plural(projects.length, 'original project', 'original projects') : ' to try in your own work') + '</dt></div>' +
+      '</dl></section>' +
 
       /* greeting or invitation, from the taste profile */
       (GT.profile ? GT.profile.homeHTML() : '') +
 
       /* four ways in */
-      '<section class="wrap doors-wrap" aria-labelledby="doors-h"><h2 id="doors-h" class="doors-h">Start from what you need</h2>' +
-      '<ul class="doors">' + DOORS.map(function (d) {
-        return '<li><a class="door" href="' + d.href + '"><span class="door-top"><span class="door-ic" aria-hidden="true">' + icon(d.ic) + '</span>' +
-          '<span class="door-k">' + d.k + '</span></span>' +
-          '<span class="door-t">' + d.t + '</span><span class="door-d">' + d.d + '</span>' +
-          '<span class="door-go">' + d.go + icon('arrow') + '</span></a></li>';
-      }).join('') + '</ul></section>' +
-
-      /* stats */
-      '<section class="wrap" aria-label="In numbers"><dl class="stats">' +
-      '<div class="stat"><dt>Teardowns</dt><dd>' + GAMES.length + '</dd><span class="stat-sub">Same template for every game</span></div>' +
-      '<div class="stat"><dt>Systems analysed</dt><dd>' + nSystems + '</dd><span class="stat-sub">Each with what, why and effect</span></div>' +
-      '<div class="stat"><dt>Loop steps mapped</dt><dd>' + nSteps + '</dd><span class="stat-sub">With what the player feels</span></div>' +
-      '<div class="stat"><dt>Takeaways</dt><dd>' + nTakes + '</dd><span class="stat-sub">Applied to ' + plural(projects.length, 'original project', 'original projects') + '</span></div>' +
-      '</dl></section>' +
+      '<section class="wrap block ways" aria-labelledby="doors-h">' +
+      '<div class="ways-head"><h2 id="doors-h">Four ways in</h2><p>Start with the one that sounds like you.</p></div>' +
+      '<ol class="ways-list">' + DOORS.map(function (d, i) {
+        return '<li><a class="door" href="' + d.href + '"><span class="door-n">' + pad2(i + 1) + '</span>' +
+          '<span class="door-k">' + d.k + '</span>' +
+          '<span class="door-main"><span class="door-t">' + d.t + '</span><span class="door-d">' + d.d + '</span></span>' +
+          '<span class="door-go"><span>' + d.go + '</span>' + icon('arrow') + '</span></a></li>';
+      }).join('') + '</ol></section>' +
 
       /* teardown grid */
       '<section class="wrap block" aria-labelledby="list-h">' +
@@ -1442,6 +1455,7 @@
     /* a quiet entrance on every page change, not on redraws */
     app.classList.remove('enter'); void app.offsetWidth; app.classList.add('enter');
     readBar(!!slug);
+    reveal();
     markNav(name === 'game' ? 'home' : name);
     paintLocalBar(name);
     setMenu(false);
@@ -1455,7 +1469,48 @@
     }
   }
 
-  window.addEventListener('hashchange', function () { route(true); });
+  window.addEventListener('hashchange', function () {
+    var p = parts();
+    var sameGame = p[0] === 'game' && view.name === 'game' && view.slug === p[1];
+    /* cross-fade between pages where the browser can; never while a leave check may ask a question */
+    if (document.startViewTransition && !reduceMotion.matches && !leaveGuard && !sameGame) {
+      document.documentElement.classList.add('vt-page');
+      var t = document.startViewTransition(function () { route(true); });
+      t.ready.catch(function () { /* skipped, the page still changed */ });
+      t.finished.then(function () { document.documentElement.classList.remove('vt-page'); }, function () { document.documentElement.classList.remove('vt-page'); });
+    } else route(true);
+  });
+
+  /* ---------- header edge and scroll reveals ---------- */
+  var hdr = document.querySelector('.site-header');
+  function paintHeader() { if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 6); }
+  window.addEventListener('scroll', paintHeader, { passive: true });
+  paintHeader();
+
+  /* anything that has reached the lower part of the screen, or was scrolled past, is shown */
+  var REVEAL = '.tally, .ways-list > li, .cards > li, .layers > li, .teaser, .note, .hi, .block-head, .sec, .recs > li, .shelves > *, .fy > li';
+  var rvTick = false;
+  function checkReveal() {
+    rvTick = false;
+    var line = window.innerHeight * 0.92;
+    all('.rv:not(.in)', app).forEach(function (el) { if (el.getBoundingClientRect().top < line) el.classList.add('in'); });
+  }
+  window.addEventListener('scroll', function () { if (!rvTick) { rvTick = true; requestAnimationFrame(checkReveal); } }, { passive: true });
+  window.addEventListener('resize', checkReveal);
+  function reveal() {
+    if (reduceMotion.matches || !window.requestAnimationFrame) return;
+    var n = 0;
+    all(REVEAL, app).forEach(function (el) {
+      if (el.classList.contains('rv')) return;
+      /* stagger siblings in the same list */
+      var prev = el.previousElementSibling;
+      n = prev && prev.classList.contains('rv') ? n + 1 : 0;
+      el.style.setProperty('--rv-d', Math.min(n, 6) * 60 + 'ms');
+      el.classList.add('rv');
+    });
+    requestAnimationFrame(function () { requestAnimationFrame(checkReveal); });
+  }
+  window.addEventListener('beforeprint', function () { all('.rv', app).forEach(function (el) { el.classList.add('in'); }); });
 
   /* ---------- search everywhere (Ctrl/Cmd + K, or "/") ---------- */
   var PAGES = [['Teardowns', '#/'], ['Design problems', '#/problems'], ['All systems', '#/systems'], ['Compare', '#/compare'],
