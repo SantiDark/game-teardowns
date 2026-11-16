@@ -148,7 +148,7 @@ window.TEARDOWNS = [
       {
         name: "Companion behavior",
         layer: "System",
-        what: "Allies fight alongside the player, and enemies do not detect them during stealth.",
+        what: "Allies fight alongside the player. In the 2013 original, which Part I remakes, enemies do not detect allies during stealth; Naughty Dog changed this rule for Part II.",
         why: "It favors flow over realism so the player is never punished for the companion's behavior.",
         effect: "The companion adds personality and support without breaking the stealth plan."
       },
@@ -758,7 +758,7 @@ window.TEARDOWNS = [
       { name: "Heat", layer: "System", what: "After a first escape, the player can add chosen difficulty conditions to earn more rewards.", why: "It lets experienced players tune the challenge they want.", effect: "Late-game runs stay tense without a fixed difficulty jump." },
       { name: "God Mode", layer: "System", what: "An optional mode that gives damage resistance, growing a little after each death.", why: "It lets more players reach the end of the story.", effect: "Players who struggle can keep going without the game changing its rules." },
       { name: "Story told through death", layer: "Narrative", what: "New conversations unlock between runs based on what just happened, including who killed the player.", why: "It ties the repeat structure to the story.", effect: "Players look forward to returning home, even after losing." },
-      { name: "Region bosses", layer: "Content", what: "Each region ends with a boss that changes its patterns on later encounters.", why: "They mark progress and test the build so far.", effect: "Reaching a new boss is a clear milestone." },
+      { name: "Region bosses", layer: "Content", what: "Each region ends with a boss. The first one can be any of the three Fury sisters, and the Extreme Measures condition of Heat changes the boss fights.", why: "They mark progress and test the build so far.", effect: "Reaching a new boss is a clear milestone." },
       { name: "Readable combat effects", layer: "Presentation", what: "Enemy attacks show ground markers and flashes, and each god has a color for its effects.", why: "It keeps fast combat readable even with many effects on screen.", effect: "The player can react to threats inside busy fights." }
     ],
 
@@ -771,11 +771,11 @@ window.TEARDOWNS = [
       audio: [
         "Characters comment on events during runs and at home.",
         "Strong hits and kills have punchy, layered sounds.",
-        "Music changes in intensity during boss fights."
+        "Bosses have their own music tracks."
       ],
       mechanical: [
-        "Hits slow the action very briefly, which makes impact readable.",
-        "Taking damage interrupts the player's attack.",
+        "Armored enemies show a separate armor bar that has to be broken first.",
+        "Death Defiance brings Zagreus back once with some health instead of ending the run.",
         "Running out of extra lives ends the run immediately."
       ]
     },
@@ -866,7 +866,7 @@ window.TEARDOWNS = [
       { name: "Climbing with stamina", layer: "Mechanic", what: "Madeline can grab walls and climb until a short stamina limit runs out.", why: "It adds vertical routes with a time limit.", effect: "Players learn to rest on ledges and plan climbs." },
       { name: "Forgiving controls", layer: "Mechanic", what: "Jumps still work shortly after leaving a ledge, and inputs pressed slightly early still count.", why: "It makes the controls match the player's intention.", effect: "Hard screens feel strict but fair." },
       { name: "Instant respawn", layer: "System", what: "Death restarts the current screen in about a second, with no lives or lost progress.", why: "It removes the cost of trying.", effect: "Players experiment and attempt very hard sections many times." },
-      { name: "Strawberries", layer: "System", what: "Optional collectibles placed on harder side routes. The game says they do not unlock anything.", why: "They give skilled players extra challenge without blocking others.", effect: "Players choose their own difficulty inside each screen." },
+      { name: "Strawberries", layer: "System", what: "Optional collectibles placed on harder side routes. A loading screen tells the player they will impress friends, but that is about it.", why: "They give skilled players extra challenge without blocking others.", effect: "Players choose their own difficulty inside each screen." },
       { name: "Assist Mode", layer: "System", what: "Options to slow the game, add dashes, or make the player invincible.", why: "It lets everyone reach the end of the story.", effect: "Players can tune difficulty without the game judging them." },
       { name: "One mechanic per chapter", layer: "Content", what: "Each chapter is built around a new element, such as moving blocks, wind or bubbles.", why: "It keeps the basic moves fresh across the game.", effect: "The player relearns familiar moves in new situations." },
       { name: "B-side chapters", layer: "Content", what: "Harder remixes of each chapter, unlocked by finding a hidden cassette.", why: "They extend the game for players who want mastery.", effect: "Experts get a second game made of the same ideas." },
@@ -920,7 +920,7 @@ window.TEARDOWNS = [
 
     tensions: [
       { title: "Hard but kind", text: "The game is demanding, but instant respawn and Assist Mode remove most of the punishment around that difficulty." },
-      { title: "Optional challenge against completion", text: "Strawberries are said to be meaningless, which frees players from completionism, yet many still feel they have to collect them." },
+      { title: "Optional challenge against completion", text: "The game tells players that strawberries are only for bragging rights, which frees them from completionism, yet many still feel they have to collect them." },
       { title: "Story against flow", text: "Story scenes give meaning to the climb, but they also interrupt a rhythm that players may want to keep." }
     ],
 
@@ -980,7 +980,7 @@ window.TEARDOWNS = [
       { name: "Card rewards", layer: "System", what: "After a fight the player picks one of three cards or skips.", why: "It makes the deck grow through many small choices.", effect: "Skipping becomes a real choice, because a smaller deck is more reliable." },
       { name: "Relics", layer: "System", what: "Permanent items for the run that change rules, such as extra energy or bonus effects.", why: "They create run-defining combinations.", effect: "Players adapt their strategy around the relics they find." },
       { name: "Branching map", layer: "Content", what: "Each act is a map where the player chooses a route through fights, elites, events, shops and rest sites.", why: "It lets players balance risk against reward.", effect: "Routing is planned around the current deck and health." },
-      { name: "Rest site choice", layer: "System", what: "At a rest site the player either heals or upgrades a card.", why: "It forces a trade between safety now and strength later.", effect: "Healthy players push their deck, hurt players play safe." },
+      { name: "Rest site choice", layer: "System", what: "At a rest site the player either heals or upgrades a card. A few relics add other options.", why: "It forces a trade between safety now and strength later.", effect: "Healthy players push their deck, hurt players play safe." },
       { name: "Ascension", layer: "System", what: "After a win, the player can climb Ascension levels that add one harder rule each.", why: "It extends the challenge for experts.", effect: "The same game stays tense after many wins." },
       { name: "Four characters", layer: "Content", what: "Each character has its own card pool and mechanics.", why: "It gives several different games with one structure.", effect: "Players learn new strategies without learning new rules." },
       { name: "Readable card text", layer: "Presentation", what: "Cards use short text, keywords and numbers that update with buffs and debuffs.", why: "It keeps complex combinations understandable.", effect: "Players can calculate their turn exactly." }
@@ -990,10 +990,10 @@ window.TEARDOWNS = [
       visual: [
         "Intent icons above enemies show the next action and damage.",
         "Card numbers change color when modified by buffs or debuffs.",
-        "The map shows every room type on every path."
+        "The map shows the room type on every path, with a question mark for unknown rooms."
       ],
       audio: [
-        "Each card type has a distinct sound when played.",
+        "Each act has its own music.",
         "Heavy hits and blocks sound different.",
         "Boss fights have their own music."
       ],
@@ -1090,8 +1090,8 @@ window.TEARDOWNS = [
       { name: "Soul and focus", layer: "System", what: "Hitting enemies fills a Soul gauge, which is spent to heal or cast spells. Healing takes time to channel.", why: "It ties healing to aggression and makes healing a risk.", effect: "Players must create safe moments in fights to heal." },
       { name: "Charms and notches", layer: "System", what: "Charms give effects, but the player can only equip as many as their notches allow, and only at benches.", why: "It turns builds into choices with limits.", effect: "Players adjust their loadout to an area or a boss." },
       { name: "Shade and lost Geo", layer: "System", what: "On death the player loses their Geo and leaves a shade where they died. Defeating it returns the Geo.", why: "It adds stakes to carrying currency.", effect: "Players spend Geo before risky areas and return carefully after dying." },
-      { name: "Maps that must be earned", layer: "System", what: "Each area's map is bought from a cartographer, and the map only updates when resting at a bench.", why: "It makes navigation part of exploration.", effect: "Getting lost and finding the cartographer becomes a small goal." },
-      { name: "Ability gates", layer: "Content", what: "Paths are blocked until the player finds abilities such as a dash, a wall climb or a double jump.", why: "It structures a large world without locked doors.", effect: "Players remember blocked paths and return when they can pass." },
+      { name: "Maps that must be earned", layer: "System", what: "Most areas' maps are bought from a cartographer, and the map only updates when resting at a bench.", why: "It makes navigation part of exploration.", effect: "Getting lost and finding the cartographer becomes a small goal." },
+      { name: "Ability gates", layer: "Content", what: "Paths are blocked until the player finds abilities such as a dash, a wall jump or a double jump.", why: "It structures a large world without locked doors.", effect: "Players remember blocked paths and return when they can pass." },
       { name: "Benches", layer: "System", what: "Benches are save points, healing points and the only place to change charms.", why: "They create safe points in a hostile world.", effect: "Finding a bench in a new area is a moment of relief." },
       { name: "Boss fights", layer: "Content", what: "Bosses with readable patterns test movement and combat together.", why: "They act as checkpoints for mastery.", effect: "Victory comes from learning patterns, not only from upgrades." },
       { name: "Environmental storytelling", layer: "Narrative", what: "The kingdom's history is told through ruins, characters and short lore tablets.", why: "It rewards curiosity without long scenes.", effect: "Players piece the story together at their own pace." },
@@ -1101,7 +1101,7 @@ window.TEARDOWNS = [
     feedback: {
       visual: [
         "The Soul gauge fills as the player hits enemies.",
-        "Hit sparks and a brief pause mark every strike.",
+        "Hit sparks mark every strike.",
         "The map fills in at benches, showing progress."
       ],
       audio: [
@@ -1126,7 +1126,7 @@ window.TEARDOWNS = [
         "Abilities that reveal paths the player already saw."
       ],
       difficulty:
-        "There is no difficulty setting. Challenge comes from enemies, bosses and navigation, and the player eases it with charms, upgrades and exploring other areas first."
+        "There is no difficulty setting. Challenge comes from enemies, bosses and navigation, and the player eases it with charms, upgrades and exploring other areas first. Finishing the game unlocks Steel Soul, a mode where one death ends the save."
     },
 
     pacing: {
@@ -1217,13 +1217,12 @@ window.TEARDOWNS = [
       ],
       audio: [
         "Heavy impacts mark pushes and collisions.",
-        "Building damage has a distinct alarm-like sound.",
         "Pilots comment on events in short text lines."
       ],
       mechanical: [
         "Pushing an enemy into another damages both.",
         "Damaged buildings stay damaged for the rest of the battle.",
-        "Mechs disabled in battle lose their pilot's experience if the pilot dies."
+        "When a mech is destroyed its pilot dies, and an AI pilot with no skills takes over for the rest of the run."
       ]
     },
 
