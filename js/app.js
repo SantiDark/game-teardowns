@@ -323,6 +323,44 @@
   ================================================================ */
 
   /* Card thumbnail: the game's pacing curve on a dot grid. */
+  /* What stretch of play the curve covers, from the first sentence of its label. */
+  function paceScope(g) {
+    var s = String(g.pacing.label || '').split('.')[0].replace(/^Typical\s+/i, '').replace(/\s+shape$/i, '').trim();
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  }
+
+  /* Larger card chart that reads from a distance: names the most intense
+     moment instead of a number, marks start and end, no dot grid. */
+  function storySVG(g, uid) {
+    var W = 320, H = 186, L = 18, R = 18, T = 78, B = 30;
+    var pts = g.pacing.points, n = pts.length, pk = peakOf(g);
+    var xy = pts.map(function (p, i) {
+      return [L + (i * (W - L - R)) / (n - 1), T + (1 - clamp(p.v, 0, 10) / 10) * (H - T - B)];
+    });
+    var line = smooth(xy, T, H - B);
+    var area = line + ' L' + f1(xy[n - 1][0]) + ' ' + (H - B) + ' L' + f1(xy[0][0]) + ' ' + (H - B) + ' Z';
+    var dots = xy.map(function (p, i) {
+      return i === pk ? '' : '<circle class="ch-dot ch-c0" cx="' + f1(p[0]) + '" cy="' + f1(p[1]) + '" r="2.4"/>';
+    }).join('');
+    var px = xy[pk][0], py = xy[pk][1];
+    var name = String(pts[pk].phase || 'Most intense');
+    var tw = Math.round(name.length * 7.1 + 22), th = 24;
+    var tx = clamp(px - tw / 2, 4, W - 4 - tw), ty = py - th - 12;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true" focusable="false">' +
+      '<defs><linearGradient id="fg-' + uid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ch-fill-stop-a"/><stop offset="1" class="ch-fill-stop-b"/></linearGradient></defs>' +
+      '<line class="ch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + (H - B) + '" y2="' + (H - B) + '"/>' +
+      '<path d="' + area + '" fill="url(#fg-' + uid + ')"/>' +
+      '<path class="ch-line ch-c0" d="' + line + '"/>' + dots +
+      '<line class="ch-grid-dash" x1="' + f1(px) + '" x2="' + f1(px) + '" y1="' + f1(py + 7) + '" y2="' + (H - B) + '"/>' +
+      '<line x1="' + f1(px) + '" x2="' + f1(px) + '" y1="' + f1(ty + th) + '" y2="' + f1(py - 6) + '" style="stroke:var(--accent-hi);stroke-width:1"/>' +
+      '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="5" style="fill:var(--accent-hi)"/>' +
+      '<rect class="st-pill" x="' + f1(tx) + '" y="' + f1(ty) + '" width="' + tw + '" height="' + th + '" rx="12"/>' +
+      '<text class="st-name" x="' + f1(tx + tw / 2) + '" y="' + f1(ty + 16.2) + '" text-anchor="middle">' + esc(name) + '</text>' +
+      '<text class="st-axis" x="' + L + '" y="' + (H - 10) + '">Start</text>' +
+      '<text class="st-axis" x="' + (W - R) + '" y="' + (H - 10) + '" text-anchor="end">End</text>' +
+      '</svg>';
+  }
+
   function thumbSVG(g, uid) {
     var W = 320, H = 150, L = 20, R = 20, T = 34, B = 24;
     var pts = g.pacing.points, n = pts.length, pk = peakOf(g);
@@ -338,18 +376,15 @@
       return i === pk ? '' : '<circle class="ch-dot ch-c0" cx="' + f1(p[0]) + '" cy="' + f1(p[1]) + '" r="2.6"/>';
     }).join('');
     var px = xy[pk][0], py = xy[pk][1];
-    var lx = clamp(px, L + 24, W - R - 24);
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true" focusable="false">' +
       '<defs><pattern id="dp-' + uid + '" width="14" height="14" patternUnits="userSpaceOnUse"><circle class="dotgrid" cx="1" cy="1" r="0.9"/></pattern>' +
       '<linearGradient id="fg-' + uid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ch-fill-stop-a"/><stop offset="1" class="ch-fill-stop-b"/></linearGradient></defs>' +
-      '<rect width="' + W + '" height="' + H + '" fill="url(#dp-' + uid + ')"/>' +
       '<line class="ch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + (H - B) + '" y2="' + (H - B) + '"/>' + ticks +
       '<path d="' + area + '" fill="url(#fg-' + uid + ')"/>' +
       '<path class="ch-line ch-c0" d="' + line + '"/>' + dots +
       '<line class="ch-grid-dash" x1="' + f1(px) + '" x2="' + f1(px) + '" y1="' + f1(py + 6) + '" y2="' + (H - B) + '"/>' +
       '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="4.5" style="fill:var(--accent-hi)"/>' +
       '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="8" style="fill:none;stroke:var(--accent-hi);stroke-opacity:.35"/>' +
-      '<text class="ch-label" x="' + f1(lx) + '" y="' + f1(py - 13) + '" text-anchor="middle">PEAK ' + esc(pts[pk].v) + '</text>' +
       '</svg>';
   }
 
@@ -395,14 +430,14 @@
   function cardHTML(g) {
     var i = GAMES.indexOf(g), e = entryOf(g.slug), o = e ? e.origin : 'base';
     return '<li><a class="gcard" href="' + gameHref(g) + '">' +
-      '<div class="gthumb"><span class="gnum">' + pad2(i + 1) + ' / PACING</span>' +
-      (o !== 'base' ? '<span class="gloc">' + (o === 'added' ? 'ADDED HERE' : 'EDITED HERE') + '</span>' : '') + thumbSVG(g, 'c' + i) + '</div>' +
+      '<div class="gthumb gstory"><p class="st-head"><span class="st-t">How tense it gets</span><span class="st-s">' + esc(paceScope(g)) + '</span></p>' +
+      (o !== 'base' ? '<span class="gloc">' + (o === 'added' ? 'ADDED HERE' : 'EDITED HERE') + '</span>' : '') + storySVG(g, 'c' + i) + '</div>' +
       '<div class="gbody">' +
       '<p class="gmeta"><span>' + esc(g.studio) + '</span><span class="sep" aria-hidden="true"></span><span>' + esc(shortYear(g.year)) + '</span><span class="sep" aria-hidden="true"></span><span>' + esc(g.genre) + '</span></p>' +
       '<h3>' + esc(g.title) + '</h3>' +
       '<p class="hook">' + esc(g.hook) + '</p>' +
       '<ul class="gtags">' + g.tags.map(function (t) { return '<li class="tag">' + esc(t) + '</li>'; }).join('') + '</ul>' +
-      '<div class="gfoot"><span>' + g.coreLoop.steps.length + '-STEP LOOP · ' + g.systems.length + ' SYSTEMS · ' + g.takeaways.length + ' TAKEAWAYS</span>' +
+      '<div class="gfoot"><span>' + g.coreLoop.steps.length + '-step loop · ' + plural(g.systems.length, 'system', 'systems') + ' · ' + plural(g.takeaways.length, 'takeaway', 'takeaways') + '</span>' +
       '<span class="go" aria-hidden="true">' + icon('arrow') + '</span></div>' +
       '</div></a></li>';
   }
@@ -553,7 +588,7 @@
       });
       rows.innerHTML = list.map(cardHTML).join('');
       empty.hidden = list.length > 0;
-      status.textContent = 'SHOWING ' + list.length + ' OF ' + plural(GAMES.length, 'TEARDOWN', 'TEARDOWNS');
+      status.textContent = 'Showing ' + list.length + ' of ' + plural(GAMES.length, 'teardown', 'teardowns');
     }
     q.addEventListener('input', apply);
     chips.forEach(function (c) {
@@ -929,7 +964,7 @@
       authorChip(g) +
       g.tags.map(function (t) { return '<li class="mchip">' + esc(t) + '</li>'; }).join('') +
       '</ul></div>' +
-      '<aside class="glance" aria-label="At a glance"><div class="gthumb"><span class="gnum">AT A GLANCE</span>' + thumbSVG(g, 'gl') + '</div>' +
+      '<aside class="glance" aria-label="At a glance"><div class="gthumb gstory"><p class="st-head"><span class="st-t">How tense it gets</span><span class="st-s">' + esc(paceScope(g)) + '</span></p>' + storySVG(g, 'gl') + '</div>' +
       '<dl><div><dt>Loop steps</dt><dd>' + g.coreLoop.steps.length + '</dd></div>' +
       '<div><dt>Systems</dt><dd>' + g.systems.length + '</dd></div>' +
       '<div><dt>Peak intensity</dt><dd>' + esc(pk.v) + '<small>/ 10</small></dd></div>' +
@@ -1105,7 +1140,7 @@
           '</a></li>';
       }).join('');
       empty.hidden = list.length > 0;
-      st.textContent = 'SHOWING ' + list.length + ' OF ' + plural(PROBLEMS.length, 'PROBLEM', 'PROBLEMS');
+      st.textContent = 'Showing ' + list.length + ' of ' + plural(PROBLEMS.length, 'problem', 'problems');
     }
     q.addEventListener('input', apply);
     apply();
@@ -1165,7 +1200,7 @@
           '</article></li>';
       }).join('');
       empty.hidden = shown.length > 0;
-      st.textContent = 'SHOWING ' + shown.length + ' OF ' + plural(list.length, 'SYSTEM', 'SYSTEMS') + ' FROM ' + plural(GAMES.length, 'GAME', 'GAMES');
+      st.textContent = 'Showing ' + shown.length + ' of ' + plural(list.length, 'system', 'systems') + ' from ' + plural(GAMES.length, 'game', 'games');
     }
     all('[data-ly]', app).forEach(function (c) {
       c.addEventListener('click', function () {

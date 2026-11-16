@@ -2149,3 +2149,21 @@ kbd { display: inline-block; min-width: 1.6em; padding: 0.1rem 0.4rem; border-ra
   @keyframes grow { from { transform: scaleX(0); } }
 }
 @media print { .rv { opacity: 1 !important; transform: none !important; } }
+
+/* ================================================================
+   READABLE CARD CHARTS
+   Plain-words header, the most intense moment named in a pill,
+   start and end marked. Small thumbnails keep only the curve.
+================================================================ */
+.gstory .st-head {
+  position: absolute; left: 0.95rem; right: 0.95rem; top: 0.85rem; margin: 0;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.55rem;
+}
+.st-t { font: 600 0.875rem/1.25 var(--font); color: var(--text); letter-spacing: -0.005em; }
+.st-s { font: 400 0.8125rem/1.25 var(--font); color: var(--text-3); }
+.st-pill { fill: var(--surface); stroke: var(--accent-line); stroke-width: 1; }
+.st-name { font: 600 12px var(--font); fill: var(--text); }
+.st-axis { font: 500 11px var(--font); fill: var(--text-3); }
+.gstory .gloc { top: auto; bottom: 0.6rem; right: 50%; transform: translateX(50%); }
+.status { font: 500 var(--t-sm)/1.4 var(--font); letter-spacing: 0; color: var(--text-3); }
+.gfoot { font: 500 0.8125rem/1.35 var(--font); letter-spacing: 0; color: var(--text-2); }
