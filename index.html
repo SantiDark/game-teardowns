@@ -7,7 +7,10 @@
   <meta name="description" content="Game design teardowns by Santiago Negro. Each game is taken apart into its core loop, systems, feedback and pacing, then compared and applied to original projects.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Game Teardowns | Santiago Negro">
-  <meta property="og:description" content="Core loops, systems, feedback and pacing of The Last of Us Part I, Dark Souls and Baldur's Gate 3, and what they teach for original projects.">
+  <meta property="og:description" content="Games taken apart to see why they work: core loops, systems, feedback and pacing, compared side by side. With a design diary, a guided editor and a taste profile.">
+  <meta property="og:site_name" content="Game Teardowns">
+  <meta name="twitter:card" content="summary">
+  <meta name="author" content="Santiago Negro">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
@@ -30,14 +33,19 @@
     /* Fonts: browsers block font files on pages opened from a folder, so
        file:// gets the same fonts embedded in css/fonts-file.css. */
     (function () {
-      var l = document.createElement('link');
       if (location.protocol === 'file:') {
+        var l = document.createElement('link');
         l.rel = 'stylesheet'; l.href = 'css/fonts-file.css';
-      } else {
-        l.rel = 'preload'; l.as = 'font'; l.type = 'font/woff2'; l.crossOrigin = 'anonymous';
-        l.href = 'assets/fonts/archivo.woff2';
+        document.head.appendChild(l);
+        return;
       }
-      document.head.appendChild(l);
+      /* the serif italic is in the home headline, so it loads early too */
+      ['archivo', 'source-serif-italic'].forEach(function (f) {
+        var p = document.createElement('link');
+        p.rel = 'preload'; p.as = 'font'; p.type = 'font/woff2'; p.crossOrigin = 'anonymous';
+        p.href = 'assets/fonts/' + f + '.woff2';
+        document.head.appendChild(p);
+      });
     })();
   </script>
 </head>
@@ -119,7 +127,7 @@
     </div>
     <div class="wrap">
       <div class="foot-base">
-        <span>Original diagrams, drawn from the data in each teardown.</span>
+        <span class="foot-sign">Made slowly, one game at a time.</span>
         <span class="mono">No build step · No tracking · Self-hosted fonts</span>
       </div>
     </div>

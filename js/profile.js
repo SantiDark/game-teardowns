@@ -883,6 +883,40 @@
     return 'me';
   }
 
+  /* ================================================================
+     HOME STRIP  a greeting for returning visitors, an invitation for new ones
+  ================================================================ */
+  function homeHTML() {
+    var p = read();
+    if (!p || !filled(p.name)) {
+      return '<section class="wrap hi-wrap" aria-labelledby="hi-h"><div class="hi hi-new">' +
+        '<div class="hi-copy"><p class="eyebrow"><span class="pip" aria-hidden="true"></span>Taste profile</p>' +
+        '<h2 id="hi-h">Tell me what you love. <em>I\'ll show you how you play.</em></h2>' +
+        '<p>Four games, movies, series and songs are enough. Their genres become six design traits that point you to the teardowns and the games that fit you.</p>' +
+        '<div class="actions"><a class="btn btn-primary" href="#/me/edit">' + icon('plus') + 'Create my profile</a>' +
+        '<span class="hi-note">Takes two minutes · stays in your browser</span></div></div>' +
+        '<div class="hi-art" aria-hidden="true">' + ['Story', 'Tension', 'Discovery', 'Strategy'].map(function (t, i) {
+          return '<span class="pf-chip c' + i + '">' + t + '</span>';
+        }).join('') + avatarSVG('You', 'av-xl') + '</div></div></section>';
+    }
+    var vec = profileVec(p), pc = percents(vec), arc = archetype(pc);
+    var recs = libraryRecs(vec, p.favs);
+    var picks = [];
+    CATS.forEach(function (c) { if (p.favs[c.id][0]) picks.push({ it: p.favs[c.id][0], c: c }); });
+    var first = p.name.trim().split(/\s+/)[0];
+    return '<section class="wrap hi-wrap" aria-labelledby="hi-h"><div class="hi">' +
+      '<div class="hi-id">' + avatarSVG(p.name, 'av-lg') +
+      '<div><p class="eyebrow">' + esc(arc.title) + '</p><h2 id="hi-h">Welcome back, ' + esc(first) + '.</h2>' +
+      '<p>' + (recs.length ? 'Your best match in the library today is <a href="' + GT.gameHref(recs[0].g) + '">' + esc(recs[0].g.title) + '</a>' +
+        (recs[0].because ? ', because you like ' + esc(recs[0].because) : '') + '.' : 'Add favorites to your profile and the library will sort itself for you.') + '</p>' +
+      '<a class="text-link" href="#/me">Open my profile' + icon('arrow') + '</a></div></div>' +
+      (picks.length ? '<ul class="hi-picks" aria-label="Your top picks">' + picks.map(function (x) {
+        return '<li><span class="hi-cover">' + coverHTML(x.it) + '</span><span class="hi-cat">' + esc(x.c.one || x.c.name) + '</span></li>';
+      }).join('') + '</ul>' : '') +
+      '</div></section>';
+  }
+  GT.profile = { homeHTML: homeHTML };
+
   GT.view('me', function (p) { return p[1] === 'edit' ? edit() : me(); });
   GT.view('u', function (p) { return shared(p[1] || ''); });
 })();

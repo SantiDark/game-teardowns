@@ -169,7 +169,9 @@ Like the editor, the diary is saved only in this browser (localStorage `gt-diary
 ## Design notes
 
 - One accent color (orange) on a neutral grey scale, with a separately tuned dark theme. All colors are CSS variables at the top of `css/style.css`.
-- Type: Archivo for interface and headings, Source Serif 4 italic only for the player-fantasy quote, and the system monospace font for small data labels.
+- Type: Archivo for interface and headings, Source Serif 4 italic for the human voice (the second half of the home headline, the author note, the player-fantasy quote, the sign-off), and the system monospace font for small data labels.
+- The home page greets a returning visitor by name, with their top picks and their best match in the library; a new visitor gets an invitation to build a profile instead.
+- Teardown pages show an estimated reading time and a thin reading-progress bar under the header. Page changes fade in, except when the system asks for reduced motion.
 - Every diagram (loops, pacing curves, thumbnails, icons) is an SVG generated from `js/data.js`, so a new teardown gets all of them automatically.
 
 ## Folder structure

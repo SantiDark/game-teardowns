@@ -431,8 +431,8 @@
       '<section class="wrap hero" aria-labelledby="hero-h">' +
       '<div class="hero-copy">' +
       '<p class="eyebrow"><span class="pip" aria-hidden="true"></span>Game design case studies</p>' +
-      '<h1 id="hero-h">Games, taken apart <span class="muted">to see why they work.</span></h1>' +
-      '<p class="lede">Each teardown breaks a game into its core loop, systems, feedback and pacing, then asks what I can use in my own projects. The structure is the same every time, so the games can be compared.</p>' +
+      '<h1 id="hero-h">Games, taken apart <em class="hero-em">to see why they work.</em></h1>' +
+      '<p class="lede">When a game stays with me, I want to know why. Each teardown follows its core loop, systems, feedback and pacing, then ends with what I would take into my own work. Same structure every time, so any two games can sit side by side.</p>' +
       '<div class="actions">' +
       '<a class="btn btn-primary" href="#/" data-jump="list-h">Browse teardowns' + icon('arrow', 'ic-arrow') + '</a>' +
       '<a class="btn" href="#/compare">Compare games</a></div>' +
@@ -449,6 +449,9 @@
       '<figcaption class="sr">Pacing curves from the teardowns, drawn from my own reading of each game\'s rhythm, not measured data.</figcaption>' +
       '</figure>' +
       '</section>' +
+
+      /* greeting or invitation, from the taste profile */
+      (GT.profile ? GT.profile.homeHTML() : '') +
 
       /* four ways in */
       '<section class="wrap doors-wrap" aria-labelledby="doors-h"><h2 id="doors-h" class="doors-h">Start from what you need</h2>' +
@@ -508,6 +511,18 @@
             return '<td>' + esc((g.compare && g.compare[r.key]) || '') + '</td>';
           }).join('') + '</tr>';
         }).join('') + '</tbody></table></div>' +
+        '</div></section>' : '') +
+
+      /* a note from the author */
+      (META.author ?
+        '<section class="wrap block" aria-labelledby="note-h"><div class="note">' +
+        '<span class="avatar note-av" aria-hidden="true">' + esc(initials) + '</span>' +
+        '<div class="note-b"><p class="eyebrow">A note from me</p>' +
+        '<h2 id="note-h" class="note-q">This is my design notebook, left open on purpose.</h2>' +
+        '<p>I write these to train my eye: to name what a game is doing instead of only feeling it. If one of them helps you fix a loop, plan a class or understand why a game got under your skin, it did its job. And if you take a game apart yourself, I would love to read it.</p>' +
+        '<p class="note-sign">' + esc(META.author) + '</p>' +
+        '<div class="actions"><a class="btn" href="#/new">' + icon('edit') + 'Write a teardown</a>' +
+        (META.repo ? '<a class="btn btn-ghost" href="#/contribute">Send it to the site' + icon('arrow', 'ic-arrow') + '</a>' : '') + '</div></div>' +
         '</div></section>' : '');
 
     /* filtering */
@@ -856,6 +871,17 @@
     return '<li class="mchip"><span class="k">By</span>' + (safe ? '<a href="' + esc(link.trim()) + '" rel="noopener">' + esc(name) + '</a>' : esc(name)) + '</li>';
   }
 
+  /* minutes to read every text field of a teardown, at about 220 words a minute */
+  function readMins(g) {
+    var words = 0;
+    (function walk(v) {
+      if (typeof v === 'string') { if (!/^(https?:|Q\d+$)/.test(v)) words += v.split(/\s+/).filter(Boolean).length; }
+      else if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === 'object') Object.keys(v).forEach(function (k) { if (k !== 'slug' && k !== 'wikidata') walk(v[k]); });
+    })(g);
+    return Math.max(1, Math.round(words / 220));
+  }
+
   function game(g) {
     document.title = g.title + ' teardown | ' + SITE;
     var idx = GAMES.indexOf(g);
@@ -886,6 +912,7 @@
       '<ul class="mchips" aria-label="Details">' +
       '<li class="mchip"><span class="k">Studio</span>' + esc(g.studio) + '</li>' +
       '<li class="mchip"><span class="k">Year</span>' + esc(g.year) + '</li>' +
+      '<li class="mchip"><span class="k">Read</span>' + readMins(g) + ' min</li>' +
       authorChip(g) +
       g.tags.map(function (t) { return '<li class="mchip">' + esc(t) + '</li>'; }).join('') +
       '</ul></div>' +
@@ -1310,9 +1337,34 @@
 
   function notFound() {
     document.title = 'Page not found | ' + SITE;
-    app.innerHTML = bandHTML('Not found', 'Error 404', 'Not found', 'There is no page at this address.') +
-      '<div class="wrap page-body"><a class="btn btn-primary" href="#/">' + icon('back') + 'Go to the list of teardowns</a></div>';
+    app.innerHTML = bandHTML('Not found', 'Error 404', 'This page wandered off', 'The address may be old or mistyped. Here are a few places worth going instead.') +
+      '<div class="wrap page-body"><div class="actions"><a class="btn btn-primary" href="#/">' + icon('back') + 'Back to the teardowns</a>' +
+      '<button type="button" class="btn" id="nf-search">' + icon('search') + 'Search the site</button></div>' +
+      '<ul class="nf-list">' + GAMES.slice(0, 3).map(function (g) {
+        return '<li><a class="port-card" href="' + gameHref(g) + '"><span><span class="port-name">' + esc(g.title) + '</span>' +
+          '<span class="port-sub">' + esc(g.hook) + '</span></span>' + icon('arrow') + '</a></li>';
+      }).join('') + '</ul></div>';
+    var sb = document.getElementById('nf-search');
+    if (sb) sb.addEventListener('click', function () { openSearch(); });
     return 'home';
+  }
+
+  /* reading progress on teardown pages */
+  var rbar = null, rbarOn = false;
+  function paintReadBar() {
+    if (!rbarOn) return;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    rbar.style.transform = 'scaleX(' + (h > 0 ? clamp(window.scrollY / h, 0, 1) : 0) + ')';
+  }
+  function readBar(on) {
+    if (!rbar) {
+      rbar = document.createElement('div'); rbar.className = 'readbar'; rbar.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(rbar);
+      window.addEventListener('scroll', function () { requestAnimationFrame(paintReadBar); }, { passive: true });
+      window.addEventListener('resize', paintReadBar);
+    }
+    rbarOn = on; rbar.hidden = !on;
+    if (on) paintReadBar();
   }
 
   function failed(err) {
@@ -1387,6 +1439,9 @@
     } catch (err) { failed(err); }
 
     view = { name: slug ? 'game' : name, slug: slug };
+    /* a quiet entrance on every page change, not on redraws */
+    app.classList.remove('enter'); void app.offsetWidth; app.classList.add('enter');
+    readBar(!!slug);
     markNav(name === 'game' ? 'home' : name);
     paintLocalBar(name);
     setMenu(false);
